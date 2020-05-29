@@ -6,3 +6,6 @@ has to be executed from the same directory as the windows iso
 ``chmod +x windusb``  
 as root  
 ``./windusb``
+
+[![alt text](https://raw.githubusercontent.com/Broly1/Hackintosh-linux-Installer/master/pict/youtube.jpg)](https://youtu.be/kLKc8EJ5Qfc "title")
+
