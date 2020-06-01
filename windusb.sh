@@ -70,9 +70,9 @@ read -r id sn unused <<<"$choice"
 # Here we partition the drive and dd the raw image to it.
 partformat(){
   if
-  umount $(echo /dev/$id?*) > /dev/null 2>&1 || :
+  umount $(echo /dev/$id?*) 
   sleep 3s
-  sgdisk --zap-all /dev/$id > /dev/null 2>&1
+  sgdisk --zap-all /dev/$id 
   sgdisk -e /dev/$id --new=0:0:+7000MiB -t 0:0700
   partprobe $(echo /dev/$id?*)
   sleep 3s
@@ -95,8 +95,9 @@ partformat(){
 while true; do
   read -p "$(echo -e ${YELLOW}"Drive ($id) will be erased, do you wish to continue (y/n)? "${NOCOLOR})" yn
   case $yn in
-    [Yy]* ) partformat; break;;
+    [Yy]* ) echo -e "\e[3mCreating The Installer Drive Be Patient...\e[0m"; partformat > /dev/null 2>&1 || :; break;;
     [Nn]* ) exit;;
     * ) echo -e "${YELLOW}Please answer yes or no."${NOCOLOR};;
   esac
 done
+echo -e "\e[3mInstallation finished, reboot and boot from this drive!\e[0m"
