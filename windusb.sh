@@ -16,7 +16,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 echo -e "\e[3mWe need to install some important tools to proceed!\e[0m"
-sleep 3s
+sleep 2s
 
 declare -A osInfo;
 osInfo[/etc/debian_version]="apt install -y"
@@ -70,23 +70,29 @@ read -r id sn unused <<<"$choice"
 # Here we partition the drive and dd the raw image to it.
 partformat(){
   if
-  umount $(echo /dev/$id?*) 
-  sleep 3s
-  sgdisk --zap-all /dev/$id 
+  umount $(echo /dev/$id?*)
+  sleep 2s
+  sgdisk --zap-all /dev/$id
   sgdisk -e /dev/$id --new=0:0:+7000MiB -t 0:0700
   partprobe $(echo /dev/$id?*)
-  sleep 3s
-  mkfs.fat -F32 -n WIND $(echo /dev/$id)1
-  mount $(echo /dev/$id)1 /mnt/
-  mkdir /winblows
-  7z x Win*.iso -o/winblows/
-  wimsplit /winblows/sources/install.wim /winblows/sources/install.swm 1000
-  rm -rf /winblows/sources/install.wim
-  mv -v /winblows/* /mnt/
-  rm -rf /winblows
-
+  sleep 2s
   then
-    sleep 3s
+    mkfs.fat -F32 -n WIND $(echo /dev/$id)1
+    mount $(echo /dev/$id)1 /mnt/
+    mkdir /windUSB
+  else
+    exit 1
+  fi
+}
+extract(){
+  if
+  7z x Win*.iso -o/windUSB/
+  wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
+  then
+    rm -rf /windUSB/sources/install.wim
+    mv -v /windUSB/* /mnt/
+    rm -rf /windUSB
+    sleep 2s
   else
     exit 1
   fi
@@ -95,7 +101,7 @@ partformat(){
 while true; do
   read -p "$(echo -e ${YELLOW}"Drive ($id) will be erased, do you wish to continue (y/n)? "${NOCOLOR})" yn
   case $yn in
-    [Yy]* ) echo -e "\e[3mCreating The Installer Drive Be Patient...\e[0m"; partformat > /dev/null 2>&1 || :; break;;
+    [Yy]* ) echo -e "\e[3mFlashing $id...\e[0m";partformat > /dev/null 2>&1 || :;extract; break;;
     [Nn]* ) exit;;
     * ) echo -e "${YELLOW}Please answer yes or no."${NOCOLOR};;
   esac
