@@ -11,8 +11,8 @@ set -e
 
 # Checking for root Identifying distro pkg-manager and installing dependencies.
 if [[ $EUID -ne 0 ]]; then
-  echo -e "${RED}This script must be executed as root!${NOCOLOR}"
-  exit 1
+    echo -e "${RED}This script must be executed as root!${NOCOLOR}"
+    exit 1
 fi
 
 echo -e "\e[3mWe need to install some important tools to proceed!\e[0m"
@@ -25,9 +25,9 @@ osInfo[/etc/arch-release]="pacman -S --noconfirm"
 
 for f in ${!osInfo[@]}
 do
-  if [[ -f $f ]];then
-    package_manager=${osInfo[$f]}
-  fi
+    if [[ -f $f ]];then
+        package_manager=${osInfo[$f]}
+    fi
 done
 echo -e "\e[3mInstalling Depencencies...\e[0m"
 package="wimlib-utils p7zip p7zip-plugins"
@@ -35,17 +35,17 @@ package1="wimlib p7zip"
 package2="wimtools p7zip-full"
 
 if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
-  ${package_manager} ${package1}
-
-elif [ "${package_manager}" = "apt install -y" ]; then
-  ${package_manager} ${package2}
-
-elif [ "${package_manager}" = "dnf install -y" ]; then
-  ${package_manager} ${package}
-
+    ${package_manager} ${package1}
+    
+    elif [ "${package_manager}" = "apt install -y" ]; then
+    ${package_manager} ${package2}
+    
+    elif [ "${package_manager}" = "dnf install -y" ]; then
+    ${package_manager} ${package}
+    
 else
-  echo -e "${RED}Your distro is not supported!${NOCOLOR}"
-  exit 1
+    echo -e "${RED}Your distro is not supported!${NOCOLOR}"
+    exit 1
 fi
 
 
@@ -59,8 +59,8 @@ readarray -t lines < <(lsblk --nodeps -no name,size | grep "sd")
 echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE FORMATED !!!${NOCOLOR}"
 echo -e "${YELLOW}Please select the usb-drive!${NOCOLOR}"
 select choice in "${lines[@]}"; do
-  [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !${NOCOLOR}" >&2; continue; }
-  break # valid choice was made; exit prompt.
+    [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !${NOCOLOR}" >&2; continue; }
+    break # valid choice was made; exit prompt.
 done
 
 # Split the chosen line into ID and serial number.
