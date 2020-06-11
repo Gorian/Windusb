@@ -6,16 +6,15 @@
 
 RED="\033[1;31m\e[3m"
 NOCOLOR="\e[0m\033[0m"
-YELLOW="\033[01;33m\e[3m"
 set -e
 
 # Checking for root Identifying distro pkg-manager and installing dependencies.
 if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}This script must be executed as root!${NOCOLOR}"
+    echo -e "${RED}This script must be executed as root!"
     exit 1
 fi
 
-echo -e "\e[3mWe need to install some important tools to proceed!\e[0m"
+echo -e "We need to install some important tools to proceed!"
 sleep 2s
 
 declare -A osInfo;
@@ -29,10 +28,10 @@ do
         package_manager=${osInfo[$f]}
     fi
 done
-echo -e "\e[3mInstalling Depencencies...\e[0m"
-package="wimlib-utils p7zip p7zip-plugins"
-package1="wimlib p7zip"
-package2="wimtools p7zip-full"
+echo -e "Installing Depencencies..."
+package="wimlib-utils p7zip p7zip-plugins rsync"
+package1="wimlib p7zip rsync"
+package2="wimtools p7zip-full rsync"
 
 if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
     ${package_manager} ${package1}
@@ -44,7 +43,7 @@ if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
     ${package_manager} ${package}
     
 else
-    echo -e "${RED}Your distro is not supported!${NOCOLOR}"
+    echo -e "${RED}Your distro is not supported!"
     exit 1
 fi
 
@@ -57,9 +56,9 @@ readarray -t lines < <(lsblk --nodeps -no name,size | grep "sd")
 
 # Prompt the user to select the drive.
 echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE FORMATED !!!${NOCOLOR}"
-echo -e "${YELLOW}Please select the usb-drive!${NOCOLOR}"
+echo -e "Please select the usb-drive!"
 select choice in "${lines[@]}"; do
-    [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !${NOCOLOR}" >&2; continue; }
+    [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !" >&2; continue; }
     break # valid choice was made; exit prompt.
 done
 
@@ -90,8 +89,9 @@ extract(){
   wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
   then
     rm -rf /windUSB/sources/install.wim
-    mv -v /windUSB/* /mnt/
+    rsync -a --info=progress2 /windUSB/* /mnt/
     rm -rf /windUSB
+    umount $(echo /dev/$id?*)
     sleep 2s
   else
     exit 1
@@ -99,11 +99,11 @@ extract(){
 }
 
 while true; do
-  read -p "$(echo -e ${YELLOW}"Drive ($id) will be erased, do you wish to continue (y/n)? "${NOCOLOR})" yn
+  read -p "$(echo -e "Drive ($id) will be erased, do you wish to continue (y/n)? ")" yn
   case $yn in
-    [Yy]* ) echo -e "\e[3mFlashing $id...\e[0m";partformat > /dev/null 2>&1 || :;extract; break;;
+    [Yy]* ) echo -e "Flashing $id...";partformat > /dev/null 2>&1 || :;extract; break;;
     [Nn]* ) exit;;
-    * ) echo -e "${YELLOW}Please answer yes or no."${NOCOLOR};;
+    * ) echo -e "Please answer yes or no.";;
   esac
 done
-echo -e "\e[3mInstallation finished, reboot and boot from this drive!\e[0m"
+echo -e "Installation finished, reboot and boot from this drive!"
