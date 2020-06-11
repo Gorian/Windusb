@@ -72,7 +72,7 @@ partformat(){
   umount $(echo /dev/$id?*)
   sleep 2s
   sgdisk --zap-all /dev/$id
-  sgdisk -e /dev/$id --new=0:0:+7000MiB -t 0:0700
+  sgdisk -e /dev/$id --new=0:0: -t 0:0700
   partprobe $(echo /dev/$id?*)
   sleep 2s
   then
