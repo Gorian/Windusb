@@ -10,43 +10,42 @@ set -e
 
 # Checking for root Identifying distro pkg-manager and installing dependencies.
 if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}This script must be executed as root!"
-    exit 1
+  echo -e "${RED}This script must be executed as root!"
+  exit 1
 fi
 
-echo -e "We need to install some important tools to proceed!"
-sleep 2s
+dependencies(){
+  echo -e "Installing wimlib p7zip!"
+  sleep 2s
+  declare -A osInfo;
+  osInfo[/etc/debian_version]="apt install -y"
+  osInfo[/etc/fedora-release]="dnf install -y"
+  osInfo[/etc/arch-release]="pacman -S --noconfirm"
 
-declare -A osInfo;
-osInfo[/etc/debian_version]="apt install -y"
-osInfo[/etc/fedora-release]="dnf install -y"
-osInfo[/etc/arch-release]="pacman -S --noconfirm"
-
-for f in ${!osInfo[@]}
-do
+  for f in ${!osInfo[@]}
+  do
     if [[ -f $f ]];then
-        package_manager=${osInfo[$f]}
+      package_manager=${osInfo[$f]}
     fi
-done
-echo -e "Installing Depencencies..."
-package="wimlib-utils p7zip p7zip-plugins rsync"
-package1="wimlib p7zip rsync"
-package2="wimtools p7zip-full rsync"
+  done
+  package="wimlib-utils p7zip p7zip-plugins"
+  package1="wimlib p7zip"
+  package2="wimtools p7zip-full"
 
-if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
+  if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
     ${package_manager} ${package1}
-    
-    elif [ "${package_manager}" = "apt install -y" ]; then
+
+  elif [ "${package_manager}" = "apt install -y" ]; then
     ${package_manager} ${package2}
-    
-    elif [ "${package_manager}" = "dnf install -y" ]; then
+
+  elif [ "${package_manager}" = "dnf install -y" ]; then
     ${package_manager} ${package}
-    
-else
+
+  else
     echo -e "${RED}Your distro is not supported!"
     exit 1
-fi
-
+  fi
+}
 
 # Print disk devices
 # Read command output line by line into array ${lines [@]}
@@ -55,11 +54,11 @@ fi
 readarray -t lines < <(lsblk --nodeps -no name,size | grep "sd")
 
 # Prompt the user to select the drive.
-echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE FORMATED !!!${NOCOLOR}"
+echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE ERASED!!!${NOCOLOR}"
 echo -e "Please select the usb-drive!"
 select choice in "${lines[@]}"; do
-    [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !" >&2; continue; }
-    break # valid choice was made; exit prompt.
+  [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !" >&2; continue; }
+  break # valid choice was made; exit prompt.
 done
 
 # Split the chosen line into ID and serial number.
@@ -69,8 +68,7 @@ read -r id sn unused <<<"$choice"
 # Here we partition the drive and dd the raw image to it.
 partformat(){
   if
-  umount $(echo /dev/$id?*)
-  sleep 2s
+  umount $(echo /dev/$id?*) || :
   sgdisk --zap-all /dev/$id
   sgdisk -e /dev/$id --new=0:0: -t 0:0700
   partprobe $(echo /dev/$id?*)
@@ -89,10 +87,11 @@ extract(){
   wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
   then
     rm -rf /windUSB/sources/install.wim
-    rsync -a --info=progress2 /windUSB/* /mnt/
+    mv -v /windUSB/* /mnt/
+    umount -f /mnt/
+    echo -e "Installation finished, reboot and boot from this drive!"
     rm -rf /windUSB
-    umount $(echo /dev/$id?*)
-    sleep 2s
+    exit 1
   else
     exit 1
   fi
@@ -101,9 +100,8 @@ extract(){
 while true; do
   read -p "$(echo -e "Drive ($id) will be erased, do you wish to continue (y/n)? ")" yn
   case $yn in
-    [Yy]* ) echo -e "Flashing $id...";partformat > /dev/null 2>&1 || :;extract; break;;
+    [Yy]* ) dependencies; echo -e "Flashing $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
     [Nn]* ) exit;;
     * ) echo -e "Please answer yes or no.";;
   esac
 done
-echo -e "Installation finished, reboot and boot from this drive!"
