@@ -12,7 +12,7 @@ as root
 ``./windusb``  
 This script will extract the windows iso to a folder split the fat install.wim into 5 smallerparts that fits within the fat32   limit.
 
-[![alt text](https://raw.githubusercontent.com/Broly1/Windusb/master/ping1.png)](https://youtu.be/kLKc8EJ5Qfc "Click here")  
+[![alt text](https://raw.githubusercontent.com/Broly1/Windusb/master/ping1.png)](https://youtu.be./kLKc8EJ5Qfc "Click here")  
 
 
 
