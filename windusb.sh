@@ -15,7 +15,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 dependencies(){
-  echo -e "Installing wimlib p7zip!"
+  echo -e "Installing wimlib p7zip rsync!"
   sleep 2s
   declare -A osInfo;
   osInfo[/etc/debian_version]="apt install -y"
@@ -28,9 +28,9 @@ dependencies(){
       package_manager=${osInfo[$f]}
     fi
   done
-  package="wimlib-utils p7zip p7zip-plugins"
-  package1="wimlib p7zip"
-  package2="wimtools p7zip-full"
+  package="wimlib-utils p7zip p7zip-plugins rsync"
+  package1="wimlib p7zip rsync"
+  package2="wimtools p7zip-full rsync"
 
   if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
     ${package_manager} ${package1}
@@ -87,8 +87,8 @@ extract(){
   wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
   then
     rm -rf /windUSB/sources/install.wim
-    mv -v /windUSB/* /mnt/
-    umount -f /mnt/
+    echo -e "Copying files to $id be patient.."
+    rsync -a --info=progress2 /windUSB/ /mnt/
     echo -e "Installation finished, reboot and boot from this drive!"
     rm -rf /windUSB
     exit 1
@@ -98,9 +98,10 @@ extract(){
 }
 
 while true; do
-  read -p "$(echo -e "Drive ($id) will be erased, do you wish to continue (y/n)? ")" yn
+  read -p "$(echo -e "Disk $id will be erased and wimlib, p7zip, rsync,
+  will be installed do you wish to continue (y/n)? ")" yn
   case $yn in
-    [Yy]* ) dependencies; echo -e "Flashing $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
+    [Yy]* ) dependencies; echo -e "Formating $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
     [Nn]* ) exit;;
     * ) echo -e "Please answer yes or no.";;
   esac
