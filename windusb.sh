@@ -6,13 +6,25 @@
 
 RED="\033[1;31m\e[3m"
 NOCOLOR="\e[0m\033[0m"
+cleanup="rm -rf /windUSB/"
 set -e
 
 # Checking for root Identifying distro pkg-manager and installing dependencies.
 if [[ $EUID -ne 0 ]]; then
-  echo -e "${RED}This script must be executed as root!"
+  echo -e "${RED}This script must be executed as root${NOCOLOR}!"
   exit 1
 fi
+
+banner() {
+  msg="# $* #"
+  edge=$(echo "$msg" | sed 's/./#/g')
+  echo "$edge"
+  echo "$msg"
+  echo "$edge"
+}
+banner "WELCOME TO windUSB!!"
+
+$cleanup
 
 dependencies(){
   echo -e "Installing wimlib p7zip rsync!"
@@ -42,7 +54,7 @@ dependencies(){
     ${package_manager} ${package}
 
   else
-    echo -e "${RED}Your distro is not supported!"
+    echo -e "${RED}Your distro is not supported${NOCOLOR}!"
     exit 1
   fi
 }
@@ -57,7 +69,7 @@ readarray -t lines < <(lsblk --nodeps -no name,size | grep "sd")
 echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE ERASED!!!${NOCOLOR}"
 echo -e "Please select the usb-drive!"
 select choice in "${lines[@]}"; do
-  [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection !" >&2; continue; }
+  [[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection${NOCOLOR}!" >&2; continue; }
   break # valid choice was made; exit prompt.
 done
 
@@ -90,7 +102,7 @@ extract(){
     echo -e "Copying files to $id be patient.."
     rsync -a --info=progress2 /windUSB/ /mnt/
     echo -e "Installation finished, reboot and boot from this drive!"
-    rm -rf /windUSB
+    $cleanup
     exit 1
   else
     exit 1
@@ -98,7 +110,7 @@ extract(){
 }
 
 while true; do
-  read -p "$(echo -e "Disk $id will be erased and wimlib, p7zip, rsync,
+  read -p "$(echo -e "Disk ${RED}$id${NOCOLOR} will be erased and wimlib, p7zip, rsync,
   will be installed do you wish to continue (y/n)? ")" yn
   case $yn in
     [Yy]* ) dependencies; echo -e "Formating $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
