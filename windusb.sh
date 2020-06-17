@@ -101,6 +101,8 @@ extract(){
     rm -rf /windUSB/sources/install.wim
     echo -e "Copying files to $id be patient.."
     rsync -a --info=progress2 /windUSB/ /mnt/
+    echo -e "umounting the drive do not remove it or cancel this process!"
+    umount $(echo /dev/$id)1
     echo -e "Installation finished, reboot and boot from this drive!"
     $cleanup
     exit 1
