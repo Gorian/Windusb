@@ -22,7 +22,7 @@ banner() {
   echo "$msg"
   echo "$edge"
 }
-banner "WELCOME TO windUSB!!"
+banner "WELCOME TO WINDUSB!!"
 
 $cleanup
 
