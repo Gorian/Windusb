@@ -113,7 +113,7 @@ extract(){
 
 while true; do
   read -p "$(echo -e "Disk ${RED}$id${NOCOLOR} will be erased and wimlib, p7zip, rsync,
-  will be installed do you wish to continue (y/n)? ")" yn
+will be installed do you wish to continue (y/n)? ")" yn
   case $yn in
     [Yy]* ) dependencies; echo -e "Formating $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
     [Nn]* ) exit;;
