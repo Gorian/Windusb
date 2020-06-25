@@ -15,18 +15,25 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+print() { echo -e   -- "$1\n"; }
+log() { echo -e   -- "\033[37m LOG: $1 \033[0m\n"; }
+success() { echo -e   -- "\033[32m SUCCESS: $1 \033[0m\n"; }
+warning() { echo -e   -- "\033[33m WARNING: $1 \033[0m\n"; }
+error() { echo -e   -- "\033[31m ERROR: $1 \033[0m\n"; }
+heading() { echo -e   -- "   \033[1;30;42m $1 \033[0m\n\n"; }
 banner() {
-  msg="# $* #"
-  edge=$(echo "$msg" | sed 's/./#/g')
-  echo "$edge"
-  echo "$msg"
-  echo "$edge"
+	clear
+	echo "  ############################ "
+	echo " #    WELCOME TO WINDUSB    # "
+	echo "############################ "
+	echo " "
+	echo " "
 }
-banner "WELCOME TO WINDUSB!!"
 
 $cleanup
 
 dependencies(){
+  banner
   echo -e "Installing wimlib p7zip rsync!"
   sleep 2s
   declare -A osInfo;
@@ -59,6 +66,7 @@ dependencies(){
   fi
 }
 
+banner
 # Print disk devices
 # Read command output line by line into array ${lines [@]}
 # Bash 3.x: use the following instead:
@@ -79,6 +87,7 @@ read -r id sn unused <<<"$choice"
 
 # Here we partition the drive and dd the raw image to it.
 partformat(){
+  banner
   if
   umount $(echo /dev/$id?*) || :
   sgdisk --zap-all /dev/$id
@@ -94,8 +103,10 @@ partformat(){
   fi
 }
 extract(){
+  banner
+  echo -e "extracting iso file..."
   if
-  7z x Win*.iso -o/windUSB/
+  7z x Win*.iso -bsp0 -bso0 -o/windUSB/
   wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
   then
     rm -rf /windUSB/sources/install.wim
@@ -110,7 +121,7 @@ extract(){
     exit 1
   fi
 }
-
+banner
 while true; do
   read -p "$(echo -e "Disk ${RED}$id${NOCOLOR} will be erased and wimlib, p7zip, rsync,
 will be installed do you wish to continue (y/n)? ")" yn
