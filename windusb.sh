@@ -39,7 +39,7 @@ dependencies(){
   declare -A osInfo;
   osInfo[/etc/debian_version]="apt install -y"
   osInfo[/etc/fedora-release]="dnf install -y"
-  osInfo[/etc/arch-release]="pacman -S --noconfirm"
+  osInfo[/etc/arch-release]="pacman -Sy --noconfirm"
 
   for f in ${!osInfo[@]}
   do
@@ -51,8 +51,8 @@ dependencies(){
   package1="wimlib p7zip rsync"
   package2="wimtools p7zip-full rsync"
 
-  if [ "${package_manager}" = "pacman -S --noconfirm" ]; then
-    ${package_manager} ${package1}
+  if [ "${package_manager}" = "pacman -Sy --noconfirm" ]; then
+    ${package_manager} --needed ${package1}
 
   elif [ "${package_manager}" = "apt install -y" ]; then
     ${package_manager} ${package2}
