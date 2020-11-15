@@ -88,9 +88,8 @@ partformat(){
 	banner
 	if
 		umount $(echo /dev/$id?*) || :
-		sgdisk --zap-all /dev/$id
-		sgdisk -e /dev/$id --new=0:0: -t 0:0700
-		partprobe $(echo /dev/$id?*)
+		sgdisk --zap-all /dev/$id && partprobe
+		sgdisk -e /dev/$id --new=0:0: -t 0:0700 && partprobe
 		sleep 2s
 	then
 		mkfs.fat -F32 -n WIND $(echo /dev/$id)1
