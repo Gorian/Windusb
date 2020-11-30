@@ -71,7 +71,7 @@ banner
 # Read command output line by line into array ${lines [@]}
 # Bash 3.x: use the following instead:
 #   IFS=$'\n' read -d '' -ra lines < <(lsblk --nodeps -no name,size | grep "sd")
-readarray -t lines < <(lsblk --nodeps -no name,size | grep "sd")
+readarray -t lines < <(lsblk -d -no name,size,MODEL,VENDOR,TRAN | grep "usb")
 
 # Prompt the user to select the drive.
 echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE ERASED!!!${NOCOLOR}"
