@@ -8,19 +8,7 @@ RED="\033[1;31m\e[3m"
 NOCOLOR="\e[0m\033[0m"
 cleanup="rm -rf /windUSB/"
 set -e
-
-# Checking for root Identifying distro pkg-manager and installing dependencies.
-if [[ $EUID -ne 0 ]]; then
-	echo -e "${RED}This script must be executed as root${NOCOLOR}!"
-	exit 1
-fi
-
-print() { echo -e   -- "$1\n"; }
-log() { echo -e   -- "\033[37m LOG: $1 \033[0m\n"; }
-success() { echo -e   -- "\033[32m SUCCESS: $1 \033[0m\n"; }
-warning() { echo -e   -- "\033[33m WARNING: $1 \033[0m\n"; }
-error() { echo -e   -- "\033[31m ERROR: $1 \033[0m\n"; }
-heading() { echo -e   -- "   \033[1;30;42m $1 \033[0m\n\n"; }
+[ "$(whoami)" != "root" ] && exec sudo -- "$0" "$@" ]
 banner() {
 	clear
 	echo "  ############################ "
@@ -67,63 +55,47 @@ dependencies(){
 }
 
 banner
-# Print disk devices
-# Read command output line by line into array ${lines [@]}
-# Bash 3.x: use the following instead:
-#   IFS=$'\n' read -d '' -ra lines < <(lsblk --nodeps -no name,size | grep "sd")
-readarray -t lines < <(lsblk -d -no name,size,MODEL,VENDOR,TRAN | grep "usb")
-
-# Prompt the user to select the drive.
+readarray -t lines < <(lsblk -p -no name,size,MODEL,VENDOR,TRAN | grep "usb")
 echo -e "${RED}WARNING: THE SELECTED DRIVE WILL BE ERASED!!!${NOCOLOR}"
 echo -e "Please select the usb-drive!"
 select choice in "${lines[@]}"; do
 	[[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection${NOCOLOR}!" >&2; continue; }
-	break # valid choice was made; exit prompt.
+	break
 done
-
-# Split the chosen line into ID and serial number.
 read -r id sn unused <<<"$choice"
 
 partformat(){
 	banner
-	if
-		umount $(echo /dev/$id?*) || :
-		sgdisk --zap-all /dev/$id && partprobe
-		sgdisk -e /dev/$id --new=0:0: -t 0:0700 && partprobe
-		sleep 2s
-	then
-		mkfs.fat -F32 -n WIND $(echo /dev/$id)1
-		mount $(echo /dev/$id)1 /mnt/
-		mkdir /windUSB
-	else
-		exit 1
-	fi
+	umount $(echo $id?*) || :
+	sgdisk --zap-all $id && partprobe
+	sgdisk -e $id --new=0:0: -t 0:0700 && partprobe
+	sleep 2s
+	mkfs.fat -F32 -n WIND $(echo $id)1
+	mount $(echo $id)1 /mnt/
+	mkdir /windUSB
 }
 extract(){
 	banner
 	echo -e "extracting iso file..."
-	if
-		7z x Win*.iso -bsp0 -bso0 -o/windUSB/
-		wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
-	then
-		rm -rf /windUSB/sources/install.wim
-		echo -e "Copying files to $id be patient.."
-		rsync -a --info=progress2 /windUSB/ /mnt/
-		echo -e "umounting the drive do not remove it or cancel this process!"
-		umount $(echo /dev/$id)1
-		echo -e "Installation finished, reboot and boot from this drive!"
-		$cleanup
-		exit 1
-	else
-		exit 1
-	fi
+	7z x Win*.iso -o/windUSB/
+	banner
+	wimsplit /windUSB/sources/install.wim /windUSB/sources/install.swm 1000
+	rm -rf /windUSB/sources/install.wim
+	banner
+	echo -e "Copying files to $id be patient.."
+	rsync -a --info=progress2 /windUSB/ /mnt/
+	banner
+	echo -e "umounting the drive do not remove it or cancel this process it will take a long time!"
+	umount $(echo $id)1
+	echo -e "Installation finished!"
+	$cleanup
 }
 banner
 while true; do
 	read -p "$(echo -e "Disk ${RED}$id${NOCOLOR} will be erased and wimlib, p7zip, rsync,
 	will be installed do you wish to continue (y/n)? ")" yn
 	case $yn in
-		[Yy]* ) dependencies; echo -e "Formating $id..."; partformat > /dev/null 2>&1 || :; extract; break;;
+		[Yy]* ) dependencies; echo -e "Formating $id..."; partformat; extract; break;;
 		[Nn]* ) exit;;
 		* ) echo -e "Please answer yes or no.";;
 	esac
