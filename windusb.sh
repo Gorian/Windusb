@@ -29,24 +29,22 @@ dependencies(){
 	osInfo[/etc/fedora-release]="dnf install -y"
 	osInfo[/etc/arch-release]="pacman -Sy --noconfirm"
 
-	for f in ${!osInfo[@]}
+	for f in "${!osInfo[@]}"
 	do
 		if [[ -f $f ]];then
 			package_manager=${osInfo[$f]}
 		fi
 	done
-	package="wimlib-utils p7zip p7zip-plugins rsync"
-	package1="wimlib p7zip rsync"
-	package2="wimtools p7zip-full rsync"
+
 
 	if [ "${package_manager}" = "pacman -Sy --noconfirm" ]; then
-		${package_manager} --needed ${package1}
+		${package_manager} --needed wimlib p7zip rsync
 
 	elif [ "${package_manager}" = "apt install -y" ]; then
-		${package_manager} ${package2}
+		${package_manager} wimtools p7zip-full rsync
 
 	elif [ "${package_manager}" = "dnf install -y" ]; then
-		${package_manager} ${package}
+		${package_manager} wimlib-utils p7zip p7zip-plugins rsync
 
 	else
 		echo -e "${RED}Your distro is not supported${NOCOLOR}!"
@@ -63,10 +61,10 @@ echo " "
 readarray -t lines < <(lsblk -p -no name,size,MODEL,VENDOR,TRAN | grep "usb")
 echo -e "Please select the usb-drive!"
 select choice in "${lines[@]}"; do
-	[[ -n $choice ]] || { echo -e "${RED}>>> Invalid Selection${NOCOLOR}!" >&2; continue; }
+	[[ -n $choice ]] || { echo -e "${RED}>>> Invaldrive Selection${NOCOLOR}!" >&2; continue; }
 	break
 done
-read -r id sn unused <<<"$choice"
+read -r drive _ <<<"$choice"
 if [ -z "$choice" ]; then
 	echo -e "Please insert the USB Drive and try again."
 	exit 1
@@ -77,12 +75,12 @@ partformat(){
 	echo " #    PARTITIONING THE DRIVE   # "
 	echo "############################### "
 	echo " "
-	umount $(echo $id?*) || :
-	sgdisk --zap-all $id && partprobe
-	sgdisk -e $id --new=0:0: -t 0:0700 && partprobe
+	umount "$drive"?* || :
+	sgdisk --zap-all "$drive" && partprobe
+	sgdisk -e "$drive" --new=0:0: -t 0:0700 && partprobe
 	sleep 2s
-	mkfs.fat -F32 -n WIND $(echo $id)1
-	mount $(echo $id)1 /mnt/
+	mkfs.fat -F32 -n WIND "$drive"1
+	mount "$drive"1 /mnt/
 	mkdir /windUSB
 }
 extract(){
@@ -107,13 +105,13 @@ extract(){
 	rsync -a --info=progress2 /windUSB/ /mnt/
 
 	echo -e "umounting the drive do not remove it or cancel this process it will take a long time!"
-	umount $(echo $id)1
+	umount "$drive"1
 	echo -e "Installation finished!"
 	$cleanup
 }
 
 while true; do
-	read -p "$(echo -e "Disk ${RED}$id${NOCOLOR} will be erased and wimlib, p7zip, rsync,
+	read -r -p "$(echo -e "Disk ${RED}$drive${NOCOLOR} will be erased and wimlib, p7zip, rsync,
 	will be installed do you wish to continue (y/n)? ")" yn
 	case $yn in
 		[Yy]* ) dependencies; partformat; extract; break;;
