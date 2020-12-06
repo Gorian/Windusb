@@ -14,9 +14,5 @@ as root
 ``./windusb``  
 
 
-[![alt text](https://raw.githubusercontent.com/Broly1/Windusb/master/ping1.png)](https://youtu.be./kLKc8EJ5Qfc "Click here")  
-
-
-
 Credits to dragon788 
 
